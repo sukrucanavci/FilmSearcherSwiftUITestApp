@@ -11,28 +11,45 @@ struct FilmListView: View {
     
     @ObservedObject var filmListViewModel: FilmListViewModel
     
+    @State var searchText = ""
+    
     init() {
         self.filmListViewModel = FilmListViewModel()
-        self.filmListViewModel.searchFilm(filmName: "titanic")
     }
     
     var body: some View {
         NavigationView {
-            List(filmListViewModel.films, id: \.imdbID) { film in
-                HStack {
-                    CustomImage(url: film.poster)
-                        .frame(width: 88, height: 128)
-                    
-                    VStack(alignment: .leading) {
-                        Text(film.title)
-                            .font(.title3)
-                            .foregroundColor(.blue)
-                        
-                        Text(film.year)
-                            .foregroundColor(.orange)
+            
+            VStack {
+                TextField("Search film...", text: $searchText, onCommit: {
+                    self.filmListViewModel.searchFilm(filmName: searchText
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? searchText
+                    )
+                }).padding()
+                    .textFieldStyle(.roundedBorder)
+                
+                List(filmListViewModel.films, id: \.imdbID) { film in
+                    NavigationLink {
+                        DetailView(imdbID: film.imdbID)
+                    } label: {
+                        HStack {
+                            CustomImage(url: film.poster)
+                                .frame(width: 88, height: 128)
+                            
+                            VStack(alignment: .leading) {
+                                Text(film.title)
+                                    .font(.title3)
+                                    .foregroundColor(.blue)
+                                
+                                Text(film.year)
+                                    .foregroundColor(.orange)
+                            }
+                        }
                     }
-                }
-            }.navigationTitle(Text("Films"))
+
+                }.navigationTitle(Text("Films"))
+            }
         }
     }
 }

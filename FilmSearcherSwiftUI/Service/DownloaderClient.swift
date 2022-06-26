@@ -9,9 +9,12 @@ import Foundation
 
 class DownloaderClient {
     
+    let BASE_URL = "https://www.omdbapi.com"
+    let API_KEY = "bf512d08"
+    
     func downloadFilms(search: String, completion: @escaping (Result<[Film]?, DownloaderError>) -> Void) {
         
-        guard let url = URL(string: "https://www.omdbapi.com/?s=\(search)&apikey=bf512d08") else {
+        guard let url = URL(string: "\(BASE_URL)/?s=\(search)&apikey=\(API_KEY)") else {
             return completion(.failure(.wrongURL))
         }
         
@@ -27,6 +30,26 @@ class DownloaderClient {
             
             completion(.success(result.films))
         }.resume() 
+    }
+    
+    func downloadFilmDetail(imdbID: String, completion: @escaping (Result<FilmDetail?, DownloaderError>) -> Void) {
+        
+        guard let url = URL(string: "\(BASE_URL)/?i=\(imdbID)&apikey=\(API_KEY)") else {
+            return completion(.failure(.wrongURL))
+        }
+        
+        URLSession.shared.dataTask(with: url) { (data, response, error) in
+            
+            guard let data = data, error == nil else {
+                return completion(.failure(.noData))
+            }
+
+            guard let result = try? JSONDecoder().decode(FilmDetail.self, from: data) else {
+                return completion(.failure(.dataProcessFail))
+            }
+            
+            completion(.success(result))
+        }.resume()
     }
 }
 
